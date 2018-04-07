@@ -59,16 +59,17 @@ function RemainingTimeDisplayer() {
         timerElement.style.bottom =  '0px';
         timerElement.style.right =  '0px';
         timerElement.style.opacity =  '0.5';
-        timerElement.style.zIndex =  '5000';
+        timerElement.style.zIndex =  '10000';
         timerElement.style.fontFamily = 'serif';
+        timerElement.style.visibility = "visible";
     }
     
     function setTimerVisible(timerElement, visible) {
         if(visible) {
-            timerElement.style.visibility = "visible";
+            timerElement.style.opacity = "0.8";
         }
         else {
-            timerElement.style.visibility = "hidden";
+            timerElement.style.opacity = "0";
         }
     }
     
@@ -76,7 +77,14 @@ function RemainingTimeDisplayer() {
         //console.log('Start');
         this.timerElement = document.createElement("div");
         this.timerElement.id = "revolver-timer";
-        document.body.insertBefore(this.timerElement, document.body.firstChild);
+        document.body.appendChild(this.timerElement);
+        this.timerElement.onmouseover = this.timerElement.onmousemove = function() {
+          setTimerVisible(this, true);
+        }
+        this.timerElement.onmouseout = function() {
+          setTimerVisible(this, false);
+        }
+        setTimerVisible(this.timerElement, false);
 
         setTimerStyle(this.timerElement);
         this.currentTick = 0;
