@@ -61,8 +61,12 @@ function activateTab(nextTab) {
 			chrome.tabs.reload(nextTab.id, function(){
 				chrome.tabs.update(nextTab.id, {selected: true}, function(){
 					setMoverTimeout(tabSetting.windowId, tabSetting.seconds);
+					revolverSettings = JSON.parse(localStorage["revolverSettings"]);
+					if(revolverSettings.time_displayed)
+						displayTimer(nextTab.id);
 				});
 			});
+			return;
 		} else {
 			// Switch Tab right away
 			chrome.tabs.update(nextTab.id, {selected: true});
