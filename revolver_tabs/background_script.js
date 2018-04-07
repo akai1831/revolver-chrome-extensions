@@ -3,6 +3,7 @@ var	tabsManifest = {},
 	settings = {},
 	advSettings = {},
 	windowStatus = {},
+	moverTimestamp = {},
 	moverTimeOut = {},
 	listeners = {};	
 // Runs initSettings after it checks for and migrates old settings.
@@ -63,7 +64,7 @@ function activateTab(nextTab) {
 					setMoverTimeout(tabSetting.windowId, tabSetting.seconds);
 					revolverSettings = JSON.parse(localStorage["revolverSettings"]);
 					if(revolverSettings.time_displayed)
-						displayTimer(nextTab.id);
+						setTimeout(displayTimer, 1000, nextTab.id);
 				});
 			});
 			return;
@@ -133,6 +134,7 @@ function addEventListeners(callback){
 		listeners.onWindowRemoved = function(windowId){
 			removeTimeout(windowId);
 			delete moverTimeOut[windowId];
+			delete moverTimeOut[windowId];
 			delete windowStatus[windowId];
 			delete tabsManifest[windowId];
 		}
@@ -189,7 +191,10 @@ function addEventListeners(callback){
 	);
         chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             if (request.method == "getSettings") {
-              var d = {data: JSON.parse(localStorage["revolverSettings"]) };
+              var d = {
+								data: JSON.parse(localStorage["revolverSettings"]),
+								timestamp: moverTimestamp[sender.windowId] || 0
+							};
               sendResponse(d);
             }
             else {
@@ -233,6 +238,7 @@ function setMoverTimeout(timerWindowId, seconds){
 		removeTimeout(timerWindowId);
 		moveTabIfIdle(timerWindowId, seconds);
 	}, parseInt(seconds)*1000);
+	moverTimestamp[timerWindowId] = Date.now();
 }
 // Remove the timeout specified.
 function removeTimeout(windowId){

@@ -96,8 +96,13 @@ function RemainingTimeDisplayer() {
 
 chrome.runtime.sendMessage({method: "getSettings"}, function(response) {
     var settings = response.data;
+    var timestamp = response.timestamp || 0;
     if('seconds' in settings) {
         _remainingTimeDisplayer = new RemainingTimeDisplayer();
-        _remainingTimeDisplayer.start(settings.seconds);
+        var seconds = settings.seconds;
+        if (timestamp > 0) {
+            seconds -= Math.max(0, (Date.now() - timestamp) / 1000);
+        }
+        _remainingTimeDisplayer.start(seconds);
     }
 });
