@@ -1,3 +1,4 @@
-
-_remainingTimeDisplayer.stop();
-delete _remainingTimeDisplayer;
+if (window._remainingTimeDisplayer) {
+  _remainingTimeDisplayer.stop();
+  _remainingTimeDisplayer = null;
+}

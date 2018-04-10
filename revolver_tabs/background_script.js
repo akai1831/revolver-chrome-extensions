@@ -20,12 +20,16 @@ function initSettings(){
 
 function displayTimer(tabId) {
     //alert('start_' + tabId);
-    chrome.tabs.executeScript(tabId, {file: "start.js"});
+    chrome.tabs.executeScript(tabId, {file: "start.js"}, function() {
+		return chrome.runtime.lastError;
+	});
 }
 
 function hideTimer(tabId) {
     //alert('stop_' + tabId);
-    chrome.tabs.executeScript(tabId, {file: "stop.js"});
+    chrome.tabs.executeScript(tabId, {file: "stop.js"}, function() {
+		return chrome.runtime.lastError;
+	});
 }
 
 // **** Tab Functionality ****
@@ -190,13 +194,15 @@ function addEventListeners(callback){
 		}
 	);
         chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-            if (request.method == "getSettings") {
-              var d = {
-								data: JSON.parse(localStorage["revolverSettings"]),
-								timestamp: moverTimestamp[sender.windowId] || 0
-							};
-              sendResponse(d);
-            }
+			if (request.method == "getSettings") {
+				var d = {
+					data: JSON.parse(localStorage["revolverSettings"]),
+				};
+				grabTabSettings(sender.tab.windowId, sender.tab, function(tabSetting){
+					d.data.seconds = tabSetting.seconds || d.data.seconds;
+				});
+				sendResponse(d);
+			}
             else {
               sendResponse({}); // snub them.
             }

@@ -43,7 +43,11 @@ function RemainingTimeDisplayer() {
         return function() {
             nextState = doTick(timerElement, that.currentTick, that.tickMax)
             that.currentTick = nextState.currentTick;
-            that.timer = setTimeout(that._tick(timerElement), 1000);
+            if (that.currentTick < that.tickMax) {
+                that.timer = setTimeout(that._tick(timerElement), 1000);
+            } else {
+                that.stop();
+            }
         }
     }
     
@@ -69,7 +73,7 @@ function RemainingTimeDisplayer() {
             timerElement.style.opacity = "0.8";
         }
         else {
-            timerElement.style.opacity = "0";
+            timerElement.style.opacity = "0.1";
         }
     }
     
@@ -84,9 +88,9 @@ function RemainingTimeDisplayer() {
         this.timerElement.onmouseout = function() {
           setTimerVisible(this, false);
         }
-        setTimerVisible(this.timerElement, false);
-
+        
         setTimerStyle(this.timerElement);
+        setTimerVisible(this.timerElement, false);
         this.currentTick = 0;
         this.tickMax = timelapse;
         this._tick(this.timerElement)(); 
@@ -104,13 +108,9 @@ function RemainingTimeDisplayer() {
 
 chrome.runtime.sendMessage({method: "getSettings"}, function(response) {
     var settings = response.data;
-    var timestamp = response.timestamp || 0;
     if('seconds' in settings) {
         _remainingTimeDisplayer = new RemainingTimeDisplayer();
         var seconds = settings.seconds;
-        if (timestamp > 0) {
-            seconds -= Math.max(0, (Date.now() - timestamp) / 1000);
-        }
         _remainingTimeDisplayer.start(seconds);
     }
 });
