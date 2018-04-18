@@ -3,6 +3,7 @@ var	tabsManifest = {},
 	settings = {},
 	advSettings = {},
 	windowStatus = {},
+	moverTimestamp = {},
 	moverTimeOut = {},
 	listeners = {};	
 // Runs initSettings after it checks for and migrates old settings.
@@ -19,12 +20,16 @@ function initSettings(){
 
 function displayTimer(tabId) {
     //alert('start_' + tabId);
-    chrome.tabs.executeScript(tabId, {file: "start.js"});
+    chrome.tabs.executeScript(tabId, {file: "start.js"}, function() {
+		return chrome.runtime.lastError;
+	});
 }
 
 function hideTimer(tabId) {
     //alert('stop_' + tabId);
-    chrome.tabs.executeScript(tabId, {file: "stop.js"});
+    chrome.tabs.executeScript(tabId, {file: "stop.js"}, function() {
+		return chrome.runtime.lastError;
+	});
 }
 
 // **** Tab Functionality ****
@@ -61,8 +66,12 @@ function activateTab(nextTab) {
 			chrome.tabs.reload(nextTab.id, function(){
 				chrome.tabs.update(nextTab.id, {selected: true}, function(){
 					setMoverTimeout(tabSetting.windowId, tabSetting.seconds);
+					revolverSettings = JSON.parse(localStorage["revolverSettings"]);
+					if(revolverSettings.time_displayed)
+						setTimeout(displayTimer, 1000, nextTab.id);
 				});
 			});
+			return;
 		} else {
 			// Switch Tab right away
 			chrome.tabs.update(nextTab.id, {selected: true});
@@ -129,6 +138,7 @@ function addEventListeners(callback){
 		listeners.onWindowRemoved = function(windowId){
 			removeTimeout(windowId);
 			delete moverTimeOut[windowId];
+			delete moverTimeOut[windowId];
 			delete windowStatus[windowId];
 			delete tabsManifest[windowId];
 		}
@@ -184,10 +194,15 @@ function addEventListeners(callback){
 		}
 	);
         chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-            if (request.method == "getSettings") {
-              var d = {data: JSON.parse(localStorage["revolverSettings"]) };
-              sendResponse(d);
-            }
+			if (request.method == "getSettings") {
+				var d = {
+					data: JSON.parse(localStorage["revolverSettings"]),
+				};
+				grabTabSettings(sender.tab.windowId, sender.tab, function(tabSetting){
+					d.data.seconds = tabSetting.seconds || d.data.seconds;
+				});
+				sendResponse(d);
+			}
             else {
               sendResponse({}); // snub them.
             }
@@ -229,6 +244,7 @@ function setMoverTimeout(timerWindowId, seconds){
 		removeTimeout(timerWindowId);
 		moveTabIfIdle(timerWindowId, seconds);
 	}, parseInt(seconds)*1000);
+	moverTimestamp[timerWindowId] = Date.now();
 }
 // Remove the timeout specified.
 function removeTimeout(windowId){
